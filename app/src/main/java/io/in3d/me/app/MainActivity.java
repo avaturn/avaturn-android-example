@@ -32,25 +32,24 @@ public class MainActivity extends AppCompatActivity {
         if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
             WebViewCompat.addWebMessageListener(myWebView, "native_app", Set.of("*"),
                     (view, message, sourceOrigin, isMainFrame, replyProxy) -> {
-                        String cust = null;
-                        byte[] glb_bytes = null;
+                        byte[] glb_bytes = new byte[0];
                         try {
                             JSONObject obj = new JSONObject(Objects.requireNonNull(message.getData()));
                             JSONObject data = obj.getJSONObject("data");
-                            cust = data.getJSONObject("customizations").toString(2);
                             String dataURI = data.getString("blobURI");
                             glb_bytes = Base64.decode(dataURI.substring(dataURI.lastIndexOf(",") + 1), Base64.DEFAULT);
                         } catch (JSONException e) {
-                            cust = "error";
+                            e.printStackTrace();
+                        } finally {
+                            new AlertDialog.Builder(this)
+                                    .setTitle("Exported avatar")
+                                    .setMessage(String.format("The received glb file has %.2f Mb size", glb_bytes.length / 1024. / 1024))
+                                    .show();
                         }
-                        new AlertDialog.Builder(this)
-                                .setTitle("Exported avatar")
-                                .setMessage(String.format("Customizations: %s\n\nThe received glb file has %.2f Mb size", cust, glb_bytes.length / 1024. / 1024))
-                                .show();
                     }
             );
         }
 
-        myWebView.loadUrl("https://vto.in3d.io/");
+        myWebView.loadUrl("https://avaturn.me/iframe/editor");
     }
 }
