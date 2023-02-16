@@ -66,6 +66,6 @@ public class MainActivity extends AppCompatActivity {
             );
         }
 
-        myWebView.loadUrl(PROJECT_DOMAIN + "/iframe/editor");
+        myWebView.loadUrl(PROJECT_DOMAIN + "/iframe");
     }
 }
