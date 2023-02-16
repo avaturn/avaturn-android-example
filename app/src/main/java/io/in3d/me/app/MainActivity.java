@@ -19,37 +19,53 @@ import org.json.JSONObject;
 import java.util.Objects;
 import java.util.Set;
 
+
 public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        WebView myWebView = (WebView) findViewById(R.id.webview);
+        WebView myWebView = findViewById(R.id.webview);
         WebSettings webSettings = myWebView.getSettings();
         webSettings.setJavaScriptEnabled(true);
 
+        String PROJECT_DOMAIN = "https://demo.avaturn.dev"; // Replace with your project's domain
+
         if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
-            WebViewCompat.addWebMessageListener(myWebView, "native_app", Set.of("*"),
+            WebViewCompat.addWebMessageListener(myWebView, "native_app",
+                    Set.of(PROJECT_DOMAIN),
                     (view, message, sourceOrigin, isMainFrame, replyProxy) -> {
-                        byte[] glb_bytes = new byte[0];
                         try {
                             JSONObject obj = new JSONObject(Objects.requireNonNull(message.getData()));
                             JSONObject data = obj.getJSONObject("data");
-                            String dataURI = data.getString("blobURI");
-                            glb_bytes = Base64.decode(dataURI.substring(dataURI.lastIndexOf(",") + 1), Base64.DEFAULT);
+
+                            if (!obj.getString("eventName").equals("v2.avatar.exported")) {
+                                return;
+                            }
+
+                            String url_type = data.getString("urlType");
+                            String url = data.getString("url");
+                            if (url_type.equals("httpURL")) {
+                                new AlertDialog.Builder(this)
+                                        .setTitle("Received http URL for glb file")
+                                        .setMessage(url)
+                                        .show();
+
+                            } else {
+                                byte[] glb_bytes = Base64.decode(url.substring(url.lastIndexOf(",") + 1), Base64.DEFAULT);
+                                new AlertDialog.Builder(this)
+                                        .setTitle("Received data URL for glb file")
+                                        .setMessage(String.format("Glb file has %.2f Mb size", glb_bytes.length / 1024. / 1024))
+                                        .show();
+                            }
                         } catch (JSONException e) {
                             e.printStackTrace();
-                        } finally {
-                            new AlertDialog.Builder(this)
-                                    .setTitle("Exported avatar")
-                                    .setMessage(String.format("The received glb file has %.2f Mb size", glb_bytes.length / 1024. / 1024))
-                                    .show();
                         }
                     }
             );
         }
 
-        myWebView.loadUrl("https://avaturn.me/iframe/editor");
+        myWebView.loadUrl(PROJECT_DOMAIN + "/iframe/editor");
     }
 }
