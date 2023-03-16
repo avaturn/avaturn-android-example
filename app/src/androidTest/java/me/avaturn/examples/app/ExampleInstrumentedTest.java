@@ -1,4 +1,4 @@
-package io.in3d.me.app;
+package me.avaturn.examples.app;
 
 import android.content.Context;
 
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
     public void useAppContext() {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
-        assertEquals("io.in3d.me.app", appContext.getPackageName());
+        assertEquals("me.avaturn.examples.app", appContext.getPackageName());
     }
 }

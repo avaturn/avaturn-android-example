@@ -6,7 +6,7 @@ android {
     compileSdk 32
 
     defaultConfig {
-        applicationId "io.in3d.me.app"
+        applicationId "me.avaturn.examples.app"
         minSdk 24
         targetSdk 32
         versionCode 1
@@ -25,7 +25,7 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_9
         targetCompatibility JavaVersion.VERSION_1_9
     }
-    namespace 'io.in3d.me.app'
+    namespace 'me.avaturn.examples.app'
 }
 
 dependencies {

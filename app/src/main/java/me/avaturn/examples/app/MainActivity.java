@@ -1,4 +1,4 @@
-package io.in3d.me.app;
+package me.avaturn.examples.app;
 
 import android.Manifest;
 import android.app.AlertDialog;
