@@ -1,17 +1,21 @@
 package io.in3d.me.app;
 
+import android.Manifest;
 import android.app.AlertDialog;
+import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Base64;
-import android.util.Log;
+import android.webkit.PermissionRequest;
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.webkit.WebViewCompat;
 import androidx.webkit.WebViewFeature;
-
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -21,6 +25,21 @@ import java.util.Set;
 
 
 public class MainActivity extends AppCompatActivity {
+    private static final int CAMERA_PERMISSION_REQUEST_CODE = 100;
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == CAMERA_PERMISSION_REQUEST_CODE) {
+            if (!(grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+                new AlertDialog.Builder(this)
+                        .setTitle("Error")
+                        .setMessage(String.format("Camera permission required for scanning"))
+                        .show();
+            }
+        }
+    }
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -29,12 +48,29 @@ public class MainActivity extends AppCompatActivity {
         WebView myWebView = findViewById(R.id.webview);
         WebSettings webSettings = myWebView.getSettings();
         webSettings.setJavaScriptEnabled(true);
+        webSettings.setDomStorageEnabled(true);
+        webSettings.setMediaPlaybackRequiresUserGesture(false);
 
-        String PROJECT_DOMAIN = "https://demo.avaturn.dev"; // Replace with your project's domain
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.CAMERA }, CAMERA_PERMISSION_REQUEST_CODE);
+        }
+
+        myWebView.setWebChromeClient(new WebChromeClient() {
+             @Override
+             public void onPermissionRequest(PermissionRequest request) {
+                 request.grant(request.getResources());
+             }
+        }
+        );
+
+        String URL = "https://demo.avaturn.dev/iframe"; // Replace with your project's domain
+        Uri uri = Uri.parse(URL);
+        String projectDomain = uri.getScheme() + "://" + uri.getHost();
+
 
         if (WebViewFeature.isFeatureSupported(WebViewFeature.WEB_MESSAGE_LISTENER)) {
             WebViewCompat.addWebMessageListener(myWebView, "native_app",
-                    Set.of(PROJECT_DOMAIN),
+                    Set.of(projectDomain),
                     (view, message, sourceOrigin, isMainFrame, replyProxy) -> {
                         try {
                             JSONObject obj = new JSONObject(Objects.requireNonNull(message.getData()));
@@ -66,6 +102,6 @@ public class MainActivity extends AppCompatActivity {
             );
         }
 
-        myWebView.loadUrl(PROJECT_DOMAIN + "/iframe");
+        myWebView.loadUrl(URL);
     }
 }
