@@ -3,13 +3,16 @@ package me.avaturn.examples.app;
 import android.Manifest;
 import android.app.AlertDialog;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Base64;
 import android.webkit.PermissionRequest;
 import android.webkit.WebChromeClient;
+import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
@@ -50,6 +53,8 @@ public class MainActivity extends AppCompatActivity {
         webSettings.setJavaScriptEnabled(true);
         webSettings.setDomStorageEnabled(true);
         webSettings.setMediaPlaybackRequiresUserGesture(false);
+        // Override user agent to support sign-in with google
+        webSettings.setUserAgentString("Mozilla/5.0 (Linux; Android 12) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.5359.128 Mobile Safari/537.36");
 
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.CAMERA }, CAMERA_PERMISSION_REQUEST_CODE);
@@ -60,8 +65,29 @@ public class MainActivity extends AppCompatActivity {
              public void onPermissionRequest(PermissionRequest request) {
                  request.grant(request.getResources());
              }
-        }
-        );
+        });
+
+        myWebView.setWebViewClient(new WebViewClient(){
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                // Open all redirects in web-view
+                return false;
+            }
+
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                super.onPageStarted(view, url, favicon);
+                // Always enable sign in with redirect in web-view
+                view.evaluateJavascript("window.avaturnFirebaseUseSignInWithRedirect = true;", (result) -> {});
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                super.onPageFinished(view, url);
+                // Always enable sign in with redirect in web-view
+                view.evaluateJavascript("window.avaturnFirebaseUseSignInWithRedirect = true;", (result) -> {});
+            }
+        });
 
         String URL = "https://demo.avaturn.dev/iframe"; // Replace with your project's domain
         Uri uri = Uri.parse(URL);
